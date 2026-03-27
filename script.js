@@ -16,10 +16,16 @@ let state = {
     teachers: [],
     leaders: [],
     attendance: {
-        students: {}, // date: {studentId: status}
-        teachers: {}
+        students: {}, 
+        teachers: {},
+        leaders: {},
+        gilanpasa: {}
     },
-    exams: {}, // grade: {term1: [], term2: [], term3: []}
+    points: {
+        mal: {}, // {date: {grade: {studentId: points}}}
+        gilanpasa: {}
+    },
+    exams: {},
     notices: []
 };
 
@@ -114,6 +120,10 @@ function renderView(view) {
             title.textContent = 'පැමිණීම සටහන් කිරීම';
             renderAttendance(container);
             break;
+        case 'points':
+            title.textContent = 'ලකුණු (මල් / ගිලන්පස)';
+            renderPoints(container);
+            break;
         case 'exams':
             title.textContent = 'විභාග ලකුණු';
             renderExams(container);
@@ -137,38 +147,71 @@ function renderView(view) {
 // ---------------- DASHBOARD VIEW ----------------
 function renderDashboard(container) {
     container.innerHTML = `
+        <div class="hero-section">
+            <div class="hero-content">
+                <h2>ආයුබෝවන්! 🙏</h2>
+                <p>${state.school.name} කළමනාකරණ පද්ධතිය වෙත සාදරයෙන් පිළිගනිමු.</p>
+                <div style="margin-top: 20px;">
+                    <span class="badge" style="background: rgba(255,255,255,0.2); color: white;">${state.school.motto}</span>
+                </div>
+            </div>
+            <i data-lucide="sun" class="hero-deco"></i>
+        </div>
+        
         <div class="grid-3">
-            <div class="card">
-                <h3>මුළු සිසුන්</h3>
-                <p style="font-size: 2rem; font-weight: 700; color: var(--primary-color)">${state.students.length}</p>
+            <div class="stat-card" onclick="renderView('students')">
+                <i data-lucide="users" style="color: var(--primary-color)"></i>
+                <span class="count">${state.students.length}</span>
+                <span class="label">මුළු සිසුන්</span>
             </div>
-            <div class="card">
-                <h3>මුළු ගුරුවරුන්</h3>
-                <p style="font-size: 2rem; font-weight: 700; color: var(--secondary-color)">${state.teachers.length}</p>
+            <div class="stat-card" onclick="renderView('teachers')">
+                <i data-lucide="user-cog" style="color: var(--teacher-color)"></i>
+                <span class="count">${state.teachers.length}</span>
+                <span class="label">ගුරුවරුන්</span>
             </div>
-            <div class="card">
-                <h3>ශිෂ්‍ය නායකයින්</h3>
-                <p style="font-size: 2rem; font-weight: 700; color: var(--accent-color)">${state.leaders.length}</p>
+            <div class="stat-card" onclick="renderView('leaders')">
+                <i data-lucide="award" style="color: var(--leader-color)"></i>
+                <span class="count">${state.leaders.length}</span>
+                <span class="label">නායකයින්</span>
             </div>
         </div>
-        <div class="card">
-            <h3>පාසල් කාලසටහන</h3>
-            <div class="grid-3" style="margin-top: 16px;">
-                <div class="input-group">
-                    <label>පැමිණීම:</label>
-                    <p>${state.school.hours.arrival}</p>
+
+        <div style="margin-top: 30px;" class="grid-2">
+            <div class="card">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                    <i data-lucide="zap" style="color: var(--leader-color)"></i>
+                    <h3 style="margin:0">ක්ෂණික ක්‍රියාමාර්ග</h3>
                 </div>
-                <div class="input-group">
-                    <label>විවේකය:</label>
-                    <p>${state.school.hours.break}</p>
+                <div class="grid-2">
+                    <button class="btn-secondary" onclick="showStudentModal()" style="justify-content: flex-start; gap: 10px; display: flex;"><i data-lucide="user-plus"></i> සිසුවෙකු එක් කරන්න</button>
+                    <button class="btn-secondary" onclick="renderView('attendance')" style="justify-content: flex-start; gap: 10px; display: flex;"><i data-lucide="check-square"></i> පැමිණීම සලකුණු කරන්න</button>
+                    <button class="btn-secondary" onclick="renderView('points')" style="justify-content: flex-start; gap: 10px; display: flex;"><i data-lucide="sparkles"></i> ලකුණු ඇතුළත් කරන්න</button>
+                    <button class="btn-secondary" onclick="renderView('notices')" style="justify-content: flex-start; gap: 10px; display: flex;"><i data-lucide="megaphone"></i> දැන්වීමක් යවන්න</button>
                 </div>
-                <div class="input-group">
-                    <label>නිමාව:</label>
-                    <p>${state.school.hours.off}</p>
+            </div>
+            <div class="card">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                    <i data-lucide="clock" style="color: var(--primary-color)"></i>
+                    <h3 style="margin:0">පාසල් කාලසටහන</h3>
+                </div>
+                <div class="grid-3">
+                    <div class="input-group">
+                        <label>පැමිණීම:</label>
+                        <p style="font-weight: 600;">${state.school.hours.arrival}</p>
+                    </div>
+                    <div class="input-group">
+                        <label>විවේකය:</label>
+                        <p style="font-weight: 600;">${state.school.hours.break}</p>
+                    </div>
+                    <div class="input-group">
+                        <label>නිමාව:</label>
+                        <p style="font-weight: 600;">${state.school.hours.off}</p>
+                    </div>
                 </div>
             </div>
         </div>
     `;
+    lucide.createIcons();
 }
 
 // ---------------- STUDENTS VIEW ----------------
@@ -406,54 +449,164 @@ function showLeaderModal(index = null) {
 }
 
 // ---------------- ATTENDANCE VIEW ----------------
+let attendanceTab = 'students';
+let attendanceDate = new Date().toISOString().split('T')[0];
+
 function renderAttendance(container) {
-    const date = new Date().toISOString().split('T')[0];
     container.innerHTML = `
         <div class="card">
-            <h3>දිනපතා පැමිණීම සටහන් කිරීම - ${date}</h3>
-            <div style="margin-top: 20px;">
-                <button class="btn-primary" onclick="markAllPresent()">සියලුම සිසුන් පැමිණ ඇත</button>
+            <div class="grid-2">
+                <div class="input-group">
+                    <label>දිනය තෝරන්න:</label>
+                    <input type="date" id="att-date" value="${attendanceDate}" onchange="attendanceDate = this.value; renderAttendance($('view-container'))">
+                </div>
             </div>
+            
+            <div class="tab-container" style="margin-top: 20px;">
+                <button class="tab-btn ${attendanceTab === 'students' ? 'active' : ''}" onclick="attendanceTab = 'students'; renderAttendance($('view-container'))">සිසුන්</button>
+                <button class="tab-btn ${attendanceTab === 'teachers' ? 'active' : ''}" onclick="attendanceTab = 'teachers'; renderAttendance($('view-container'))">ගුරුවරුන්</button>
+                <button class="tab-btn ${attendanceTab === 'leaders' ? 'active' : ''}" onclick="attendanceTab = 'leaders'; renderAttendance($('view-container'))">නායකයින්</button>
+                <button class="tab-btn ${attendanceTab === 'gilanpasa' ? 'active' : ''}" onclick="attendanceTab = 'gilanpasa'; renderAttendance($('view-container'))">ගිලන්පස</button>
+            </div>
+
             <div class="table-container" style="margin-top: 20px;">
                 <table>
                     <thead>
                         <tr>
                             <th>නම</th>
-                            <th>පන්තිය</th>
+                            ${attendanceTab === 'students' ? '<th>පන්තිය</th>' : ''}
                             <th>පැමිණීම</th>
                             <th>ක්‍රියාමාර්ග</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${state.students.map((s, index) => {
-                            const status = (state.attendance.students[date] || {})[index] || 'absent';
-                            return `
-                                <tr>
-                                    <td>${s.name}</td>
-                                    <td>${s.grade}</td>
-                                    <td>
-                                        <select onchange="updateAttendance('${date}', ${index}, this.value)">
-                                            <option value="present" ${status === 'present' ? 'selected' : ''}>පැමිණ ඇත</option>
-                                            <option value="absent" ${status === 'absent' ? 'selected' : ''}>පැමිණ නැත</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        ${status === 'absent' ? `<button class="btn-secondary" onclick="sendAbsentAlert(${index})">Alert Send</button>` : ''}
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
+                        ${renderAttendanceRows()}
                     </tbody>
                 </table>
             </div>
         </div>
     `;
+    lucide.createIcons();
 }
 
-function updateAttendance(date, index, status) {
-    if (!state.attendance.students[date]) state.attendance.students[date] = {};
-    state.attendance.students[date][index] = status;
-    renderView('attendance');
+function renderAttendanceRows() {
+    let list = [];
+    if (attendanceTab === 'students') list = state.students;
+    else if (attendanceTab === 'teachers') list = state.teachers;
+    else if (attendanceTab === 'leaders') list = state.leaders;
+    else if (attendanceTab === 'gilanpasa') list = state.students; // Anyone can bring gilanpasa
+
+    if (list.length === 0) return '<tr><td colspan="4" style="text-align:center">දත්ත නොමැත</td></tr>';
+
+    return list.map((item, index) => {
+        const dateAtt = state.attendance[attendanceTab][attendanceDate] || {};
+        const status = dateAtt[index] || 'absent';
+        return `
+            <tr>
+                <td>${item.name}</td>
+                ${attendanceTab === 'students' ? `<td>${item.grade}</td>` : ''}
+                <td>
+                    <select onchange="updateAttendance('${attendanceDate}', ${index}, this.value, '${attendanceTab}')">
+                        <option value="present" ${status === 'present' ? 'selected' : ''}>පැමිණ ඇත</option>
+                        <option value="absent" ${status === 'absent' ? 'selected' : ''}>පැමිණ නැත</option>
+                    </select>
+                </td>
+                <td>
+                    ${status === 'absent' && (attendanceTab === 'students' || attendanceTab === 'teachers') ? 
+                        `<button class="btn-secondary" onclick="sendAbsentAlert(${index}, '${attendanceTab}')">Alert Save</button>` : '-'}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updateAttendance(date, index, status, type) {
+    if (!state.attendance[type][date]) state.attendance[type][date] = {};
+    state.attendance[type][date][index] = status;
+    saveStateQuietly();
+    renderAttendance($('view-container'));
+}
+
+function saveStateQuietly() {
+    localStorage.setItem('nimal_web_state', JSON.stringify(state));
+}
+
+// ---------------- POINTS VIEW ----------------
+let pointsType = 'mal'; // mal or gilanpasa
+let pointsGrade = '';
+let pointsDate = new Date().toISOString().split('T')[0];
+
+function renderPoints(container) {
+    const grades = [...new Set(state.students.map(s => s.grade))];
+    container.innerHTML = `
+        <div class="card">
+            <div class="grid-3">
+                <div class="input-group">
+                    <label>දිනය:</label>
+                    <input type="date" value="${pointsDate}" onchange="pointsDate = this.value; renderPoints($('view-container'))">
+                </div>
+                <div class="input-group">
+                    <label>ලකුණු වර්ගය:</label>
+                    <select onchange="pointsType = this.value; renderPoints($('view-container'))">
+                        <option value="mal" ${pointsType === 'mal' ? 'selected' : ''}>මල් ලකුණු</option>
+                        <option value="gilanpasa" ${pointsType === 'gilanpasa' ? 'selected' : ''}>ගිලන්පස පූජා ලකුණු</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>පන්තිය:</label>
+                    <select onchange="pointsGrade = this.value; renderPoints($('view-container'))">
+                        <option value="">සියලුම</option>
+                        ${grades.map(g => `<option value="${g}" ${pointsGrade === g ? 'selected' : ''}>${g}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container" style="margin-top: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>සිසුවාගේ නම</th>
+                            <th>ලකුණු</th>
+                            <th>ක්‍රියාමාර්ග</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${renderPointsRows()}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    lucide.createIcons();
+}
+
+function renderPointsRows() {
+    const filteredStudents = pointsGrade ? state.students.filter(s => s.grade === pointsGrade) : state.students;
+    if (filteredStudents.length === 0) return '<tr><td colspan="3" style="text-align:center">සිසුන් තෝරා නැත</td></tr>';
+
+    return filteredStudents.map((s, idx) => {
+        const studentIdx = state.students.indexOf(s);
+        const currentPoints = ((state.points[pointsType][pointsDate] || {})[s.grade] || {})[studentIdx] || 0;
+        return `
+            <tr>
+                <td>${s.name}</td>
+                <td><input type="number" value="${currentPoints}" style="width: 80px;" onchange="updatePoints(${studentIdx}, '${s.grade}', this.value)"></td>
+                <td><button class="btn-secondary" onclick="updatePoints(${studentIdx}, '${s.grade}', 1, true)">+1 එක් කරන්න</button></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updatePoints(studentIdx, grade, val, increment = false) {
+    if (!state.points[pointsType][pointsDate]) state.points[pointsType][pointsDate] = {};
+    if (!state.points[pointsType][pointsDate][grade]) state.points[pointsType][pointsDate][grade] = {};
+    
+    let current = parseInt(state.points[pointsType][pointsDate][grade][studentIdx] || 0);
+    if (increment) state.points[pointsType][pointsDate][grade][studentIdx] = current + 1;
+    else state.points[pointsType][pointsDate][grade][studentIdx] = parseInt(val);
+    
+    saveStateQuietly();
+    renderPoints($('view-container'));
 }
 
 function sendAbsentAlert(index) {
