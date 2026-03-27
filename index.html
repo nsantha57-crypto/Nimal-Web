@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nimal-Web | Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Sinhala:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div id="school-logo-svg" class="logo-svg">
+                        <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="45" fill="url(#grad1)" />
+                            <path d="M50 20L65 40H35L50 20Z" fill="white" />
+                            <rect x="40" y="50" width="20" height="25" fill="white" />
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <button class="edit-logo-btn" onclick="document.getElementById('logo-upload').click()">
+                        <i data-lucide="edit-3"></i>
+                    </button>
+                    <input type="file" id="logo-upload" hidden accept="image/*">
+                </div>
+                <h1 id="sidebar-school-name">දහම් පාසල</h1>
+                <button id="close-sidebar" class="mobile-only"><i data-lucide="x"></i></button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="dashboard">
+                    <i data-lucide="layout-dashboard"></i> <span>මුල පිටුව</span>
+                </button>
+                <button class="nav-item" data-view="students">
+                    <i data-lucide="users"></i> <span>සිසුන්</span>
+                </button>
+                <button class="nav-item" data-view="teachers">
+                    <i data-lucide="user-cog"></i> <span>ගුරුවරුන්</span>
+                </button>
+                <button class="nav-item" data-view="leaders">
+                    <i data-lucide="award"></i> <span>ශිෂ්‍ය නායකයින්</span>
+                </button>
+                <button class="nav-item" data-view="attendance">
+                    <i data-lucide="calendar-check"></i> <span>පැමිණීම</span>
+                </button>
+                <button class="nav-item" data-view="exams">
+                    <i data-lucide="file-text"></i> <span>විභාග හා ලකුණු</span>
+                </button>
+                <button class="nav-item" data-view="interviews">
+                    <i data-lucide="clipboard-list"></i> <span>නායක සම්මුඛ පරීක්ෂණ</span>
+                </button>
+                <button class="nav-item" data-view="notices">
+                    <i data-lucide="megaphone"></i> <span>දැන්වීම් පුවරුව</span>
+                </button>
+                <button class="nav-item" data-view="settings">
+                    <i data-lucide="settings"></i> <span>කළමනාකරණය</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="install-btn" class="install-btn">
+                    <i data-lucide="download"></i> <span>ඇප් එක ස්ථාපනය කරන්න</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="main-content">
+            <header class="top-bar">
+                <button id="menu-toggle" class="menu-btn">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="header-info">
+                    <h2 id="current-view-title">මුල පිටුව</h2>
+                    <p id="current-date"></p>
+                </div>
+                <div class="header-actions">
+                    <button id="save-all-btn" class="save-btn">
+                        <i data-lucide="save"></i> <span>සුරකින්න</span>
+                    </button>
+                </div>
+            </header>
+
+            <div id="view-container" class="view-container">
+                <!-- Views will be rendered here dynamically -->
+            </div>
+        </main>
+        
+        <!-- Mobile Bottom Nav -->
+        <nav class="mobile-nav">
+            <button class="mobile-nav-item active" data-view="dashboard">
+                <i data-lucide="layout-dashboard"></i>
+                <span>මුල</span>
+            </button>
+            <button class="mobile-nav-item" data-view="students">
+                <i data-lucide="users"></i>
+                <span>සිසුන්</span>
+            </button>
+            <button class="mobile-nav-item" data-view="attendance">
+                <i data-lucide="calendar-check"></i>
+                <span>පැමිණීම</span>
+            </button>
+            <button class="mobile-nav-item" data-view="settings">
+                <i data-lucide="settings"></i>
+                <span>සැකසුම්</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container" class="modal-container hidden">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h3 id="modal-title">Edit</h3>
+                <button onclick="closeModal()"><i data-lucide="x"></i></button>
+            </header>
+            <div id="modal-body" class="modal-body">
+                <!-- Form fields go here -->
+            </div>
+            <footer class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">අවලංගු කරන්න</button>
+                <button id="modal-save-btn" class="btn-primary">තහවුරු කරන්න</button>
+            </footer>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
