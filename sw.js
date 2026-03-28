@@ -1,11 +1,10 @@
-const CACHE_NAME = 'nimal-web-cache-v6'; // Incremented version to force update
+const CACHE_NAME = 'nimal-web-cache-v7'; // Incremented version to force update
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './script.js',
-  './manifest.json',
-  './sw.js'
+  './manifest.json'
 ];
 
 // Install event - caching the assets

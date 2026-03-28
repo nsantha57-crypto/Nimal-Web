@@ -911,25 +911,60 @@ $('install-btn-top').addEventListener('click', async () => {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker Registered'))
+            .then(reg => {
+                console.log('Service Worker Registered');
+                // Check for updates in the background
+                reg.update();
+                
+                // If a new service worker is waiting, prompt the user (optional, but good practice)
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New update available, we can trigger the update app logic automatically
+                            // or just wait for the user to click the refresh button.
+                            console.log('New update available!');
+                        }
+                    });
+                });
+            })
             .catch(err => console.log('Service Worker Registration Failed', err));
     });
 }
 
 // Force update PWA
-function updateApp() {
-    if ('serviceWorker' in navigator) {
-        caches.keys().then((names) => {
-            for (let name of names) caches.delete(name);
-        });
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
+async function updateApp() {
+    // Adding a loading state to the button
+    const btn = document.getElementById('refresh-btn');
+    if(btn) {
+        btn.innerHTML = '<i data-lucide="loader" class="spin"></i>';
+        if(typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    try {
+        if ('serviceWorker' in navigator) {
+            // 1. Unregister all service workers first
+            const registrations = await navigator.serviceWorker.getRegistrations();
             for (let registration of registrations) {
-                registration.unregister();
+                await registration.unregister();
             }
-        }).then(() => {
-            window.location.reload(true);
-        });
-    } else {
+            
+            // 2. Clear all cache storages
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+            
+            // 3. Optional: clear local storage if strictly required, but usually not for app data
+            // localStorage.removeItem('nimal-theme');
+            
+            console.log('Caches cleared and SW unregistered.');
+            
+            // 4. Hard reload with cache-busting timestamp
+            window.location.href = window.location.href.split('?')[0] + '?t=' + new Date().getTime();
+        } else {
+            window.location.href = window.location.href.split('?')[0] + '?t=' + new Date().getTime();
+        }
+    } catch(e) {
+        console.error('Update failed:', e);
         window.location.reload(true);
     }
 }
