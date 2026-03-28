@@ -1,20 +1,20 @@
 :root {
-    --primary-color: #6366f1;
-    --secondary-color: #a855f7;
-    --bg-color: #f8fafc;
-    --card-bg: rgba(255, 255, 255, 0.85);
-    --sidebar-bg: #ffffff;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --accent-color: #f43f5e; /* Rose */
-    --teacher-color: #0ea5e9; /* Sky */
-    --leader-color: #f59e0b; /* Amber */
-    --danger-color: #ef4444;
-    --success-color: #10b981;
-    --warning-color: #f59e0b;
+    --primary-color: #d97706; /* Golden Yellow / Amber */
+    --secondary-color: #78350f; /* Deep Brown */
+    --bg-color: #fffbeb; /* Cream / Pale Yellow background */
+    --card-bg: #ffffff;
+    --sidebar-bg: #fef3c7; /* Light Yellow / Amber sidebar */
+    --text-primary: #451a03; /* Very dark brown text */
+    --text-secondary: #92400e; /* Brownish secondary text */
+    --accent-color: #f59e0b; /* Amber accent */
+    --teacher-color: #b45309; /* Deep Orange/Brown for teachers */
+    --leader-color: #d97706; /* Golden Yellow for leaders */
+    --danger-color: #991b1b;
+    --success-color: #166534;
+    --warning-color: #d97706;
     --border-radius: 12px;
-    --glass-border: 1px solid rgba(255, 255, 255, 0.2);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --glass-border: 1px solid rgba(120, 53, 15, 0.1);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -451,6 +451,80 @@ th {
 .action-btns {
     display: flex;
     gap: 8px;
+}
+
+/* Attendance Toggle */
+.att-toggle {
+    display: flex;
+    gap: 4px;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.att-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.att-btn.present-active {
+    background: var(--success-color);
+    color: white;
+}
+
+.att-btn.absent-active {
+    background: var(--danger-color);
+    color: white;
+}
+
+.attendance-summary strong {
+    color: var(--primary-color);
+}
+
+/* Stat Card Improvements */
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--primary-color);
+    opacity: 0.5;
+}
+
+/* Custom Table Adjustments */
+.table-container table tr:hover {
+    background-color: rgba(217, 119, 6, 0.05);
+}
+
+.badge-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.badge-warning { background: #fef9c3; color: #854d02; border: 1px solid #fef08a; }
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .att-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .att-btn {
+        flex: 1;
+        padding: 10px;
+    }
 }
 
 .action-btn {

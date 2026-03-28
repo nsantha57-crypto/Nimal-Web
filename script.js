@@ -144,8 +144,42 @@ function renderView(view) {
     lucide.createIcons();
 }
 
+// Add these utility functions to calculate totals
+function getTotalPoints(studentIdx, type) {
+    let total = 0;
+    const typePoints = state.points[type] || {};
+    for (let date in typePoints) {
+        for (let grade in typePoints[date]) {
+            if (typePoints[date][grade][studentIdx] !== undefined) {
+                total += parseInt(typePoints[date][grade][studentIdx]);
+            }
+        }
+    }
+    return total;
+}
+
+function getAttendanceSummary(type) {
+    const today = new Date().toISOString().split('T')[0];
+    const dateAtt = state.attendance[type][today] || {};
+    let present = 0;
+    
+    // Check if type exists in state.attendance
+    if (!state.attendance[type]) return { present: 0, total: 0 };
+
+    let total = type === 'students' ? state.students.length : (type === 'teachers' ? state.teachers.length : state.leaders.length);
+    
+    for (let idx in dateAtt) {
+        if (dateAtt[idx] === 'present') present++;
+    }
+    return { present, total };
+}
+
 // ---------------- DASHBOARD VIEW ----------------
 function renderDashboard(container) {
+    const sAtt = getAttendanceSummary('students');
+    const tAtt = getAttendanceSummary('teachers');
+    const lAtt = getAttendanceSummary('leaders');
+
     container.innerHTML = `
         <div class="hero-section">
             <div class="hero-content">
@@ -163,16 +197,19 @@ function renderDashboard(container) {
                 <i data-lucide="users" style="color: var(--primary-color)"></i>
                 <span class="count">${state.students.length}</span>
                 <span class="label">මුළු සිසුන්</span>
+                <div class="attendance-summary" style="margin-top:10px; font-size:0.85rem; color:var(--text-secondary)">අද පැමිණීම: <strong>${sAtt.present}/${sAtt.total}</strong></div>
             </div>
             <div class="stat-card" onclick="renderView('teachers')">
                 <i data-lucide="user-cog" style="color: var(--teacher-color)"></i>
                 <span class="count">${state.teachers.length}</span>
                 <span class="label">ගුරුවරුන්</span>
+                <div class="attendance-summary" style="margin-top:10px; font-size:0.85rem; color:var(--text-secondary)">අද පැමිණීම: <strong>${tAtt.present}/${tAtt.total}</strong></div>
             </div>
             <div class="stat-card" onclick="renderView('leaders')">
                 <i data-lucide="award" style="color: var(--leader-color)"></i>
                 <span class="count">${state.leaders.length}</span>
                 <span class="label">නායකයින්</span>
+                <div class="attendance-summary" style="margin-top:10px; font-size:0.85rem; color:var(--text-secondary)">අද පැමිණීම: <strong>${lAtt.present}/${lAtt.total}</strong></div>
             </div>
         </div>
 
@@ -227,7 +264,7 @@ function renderStudents(container) {
                     <thead>
                         <tr>
                             <th>නම</th>
-                            <th>උපන්දිනය</th>
+                            <th>මල්/ගිලන්පස ලකුණු</th>
                             <th>පන්තිය</th>
                             <th>වට්ස්ඇප්</th>
                             <th>ක්‍රියාමාර්ග</th>
@@ -237,7 +274,12 @@ function renderStudents(container) {
                         ${state.students.map((s, index) => `
                             <tr>
                                 <td>${s.name}</td>
-                                <td>${s.dob}</td>
+                                <td>
+                                    <div style="display:flex; gap:5px;">
+                                        <span class="badge badge-success">M: ${getTotalPoints(index, 'mal')}</span>
+                                        <span class="badge badge-warning">G: ${getTotalPoints(index, 'gilanpasa')}</span>
+                                    </div>
+                                </td>
                                 <td>${s.grade}</td>
                                 <td>${s.whatsapp}</td>
                                 <td>
@@ -383,25 +425,37 @@ function renderLeaders(container) {
                             <th>නම</th>
                             <th>පන්තිය</th>
                             <th>තනතුර</th>
-                            <th>ලකුණු (මල්/නිමාව)</th>
+                            <th>මුළු ලකුණු (මල්/නිමාව)</th>
                             <th>ක්‍රියාමාර්ග</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${state.leaders.map((l, index) => `
-                            <tr>
-                                <td>${l.name}</td>
-                                <td>${l.grade}</td>
-                                <td><span class="badge ${l.rank === 'Pradhana' ? 'badge-success' : 'badge-warning'}">${l.rank}</span></td>
-                                <td>M: ${l.malPoints || 0} / G: ${l.gilanpasaPoints || 0}</td>
-                                <td>
-                                    <div class="action-btns">
-                                        <button class="action-btn btn-edit" onclick="editLeader(${index})"><i data-lucide="edit"></i></button>
-                                        <button class="action-btn btn-delete" onclick="deleteLeader(${index})"><i data-lucide="trash-2"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
+                        ${state.leaders.map((l, index) => {
+                            // Find student index by name to get aggregated points
+                            const studentIdx = state.students.findIndex(s => s.name === l.name);
+                            const mPoints = studentIdx !== -1 ? getTotalPoints(studentIdx, 'mal') : 0;
+                            const gPoints = studentIdx !== -1 ? getTotalPoints(studentIdx, 'gilanpasa') : 0;
+
+                            return `
+                                <tr>
+                                    <td>${l.name}</td>
+                                    <td>${l.grade}</td>
+                                    <td><span class="badge ${l.rank === 'Pradhana' ? 'badge-success' : 'badge-warning'}">${l.rank}</span></td>
+                                    <td>
+                                        <div style="display:flex; gap:5px;">
+                                            <span class="badge badge-success">M: ${mPoints}</span>
+                                            <span class="badge badge-warning">G: ${gPoints}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="action-btn btn-edit" onclick="editLeader(${index})"><i data-lucide="edit"></i></button>
+                                            <button class="action-btn btn-delete" onclick="deleteLeader(${index})"><i data-lucide="trash-2"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
@@ -494,7 +548,7 @@ function renderAttendanceRows() {
     if (attendanceTab === 'students') list = state.students;
     else if (attendanceTab === 'teachers') list = state.teachers;
     else if (attendanceTab === 'leaders') list = state.leaders;
-    else if (attendanceTab === 'gilanpasa') list = state.students; // Anyone can bring gilanpasa
+    else if (attendanceTab === 'gilanpasa') list = state.students; // Mal/Gilanpasa attendance
 
     if (list.length === 0) return '<tr><td colspan="4" style="text-align:center">දත්ත නොමැත</td></tr>';
 
@@ -506,14 +560,14 @@ function renderAttendanceRows() {
                 <td>${item.name}</td>
                 ${attendanceTab === 'students' ? `<td>${item.grade}</td>` : ''}
                 <td>
-                    <select onchange="updateAttendance('${attendanceDate}', ${index}, this.value, '${attendanceTab}')">
-                        <option value="present" ${status === 'present' ? 'selected' : ''}>පැමිණ ඇත</option>
-                        <option value="absent" ${status === 'absent' ? 'selected' : ''}>පැමිණ නැත</option>
-                    </select>
+                    <div class="att-toggle">
+                        <button class="att-btn ${status === 'present' ? 'present-active' : ''}" onclick="updateAttendance('${attendanceDate}', ${index}, 'present', '${attendanceTab}')">පැමිණ ඇත</button>
+                        <button class="att-btn ${status === 'absent' ? 'absent-active' : ''}" onclick="updateAttendance('${attendanceDate}', ${index}, 'absent', '${attendanceTab}')">නැත</button>
+                    </div>
                 </td>
                 <td>
                     ${status === 'absent' && (attendanceTab === 'students' || attendanceTab === 'teachers') ? 
-                        `<button class="btn-secondary" onclick="sendAbsentAlert(${index}, '${attendanceTab}')">Alert Save</button>` : '-'}
+                        `<button class="btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="sendAbsentAlert(${index}, '${attendanceTab}')"><i data-lucide="message-square" style="width:14px; height:14px;"></i> Alert</button>` : '-'}
                 </td>
             </tr>
         `;
@@ -587,11 +641,23 @@ function renderPointsRows() {
     return filteredStudents.map((s, idx) => {
         const studentIdx = state.students.indexOf(s);
         const currentPoints = ((state.points[pointsType][pointsDate] || {})[s.grade] || {})[studentIdx] || 0;
+        const total = getTotalPoints(studentIdx, pointsType);
+        
         return `
             <tr>
-                <td>${s.name}</td>
-                <td><input type="number" value="${currentPoints}" style="width: 80px;" onchange="updatePoints(${studentIdx}, '${s.grade}', this.value)"></td>
-                <td><button class="btn-secondary" onclick="updatePoints(${studentIdx}, '${s.grade}', 1, true)">+1 එක් කරන්න</button></td>
+                <td><strong>${s.name}</strong> <span style="font-size: 0.8rem; opacity: 0.7;">(${s.grade})</span></td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="number" value="${currentPoints}" style="width: 70px; text-align:center;" onchange="updatePoints(${studentIdx}, '${s.grade}', this.value)">
+                        <span style="font-size:0.85rem; color:var(--text-secondary)">මුළු: ${total}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-primary" style="padding: 6px 12px; font-size:0.9rem;" onclick="updatePoints(${studentIdx}, '${s.grade}', 1, true)">+1 එක් කරන්න</button>
+                        <button class="btn-secondary" style="padding: 6px 12px; font-size:0.9rem;" onclick="updatePoints(${studentIdx}, '${s.grade}', -1, true)">-1</button>
+                    </div>
+                </td>
             </tr>
         `;
     }).join('');
