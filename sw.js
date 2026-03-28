@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nimal-web-cache-v5'; // Incremented version to v5
+const CACHE_NAME = 'nimal-web-cache-v6'; // Incremented version to force update
 const urlsToCache = [
   './',
   './index.html',

@@ -5,7 +5,7 @@ const firebaseConfig = {
     projectId: "school-f6436",
     storageBucket: "school-f6436.firebasestorage.app",
     messagingSenderId: "416612644923",
-    appId: "1:416612644923:web:ec47fa1679b4ebba96841e"
+    appId: "1:416612644923:web:fdb2abea64d5162e96841e"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
