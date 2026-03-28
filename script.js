@@ -1,3 +1,20 @@
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyB9VziVCtIffdMTYHtH3Fd7AB8sb3X1c8I",
+    authDomain: "school-f6436.firebaseapp.com",
+    projectId: "school-f6436",
+    storageBucket: "school-f6436.firebasestorage.app",
+    messagingSenderId: "416612644923",
+    appId: "1:416612644923:web:ec47fa1679b4ebba96841e"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Enable offline persistence
+db.enablePersistence().catch((err) => {
+    console.warn("Firestore offline persistence error:", err.code);
+});
+
 // State Management
 let state = {
     school: {
@@ -5,7 +22,7 @@ let state = {
         address: "ලිපිනය මෙතන",
         phones: ["011-2345678", "011-8765432", "071-1234567"],
         motto: "ගුරු දේවෝ භව",
-        logo: "https://via.placeholder.com/150",
+        logo: "logo.png",
         hours: {
             arrival: "07:30 - 08:00",
             break: "10:30",
@@ -30,34 +47,62 @@ let state = {
 };
 
 // Initialize State
+let isAppInitialized = false;
+
 function init() {
-    const savedState = localStorage.getItem('nimal_web_state');
-    if (savedState) {
-        const loaded = JSON.parse(savedState);
-        // Deep merge logic to ensure new keys exist
-        state = { ...state, ...loaded };
-        state.school = { ...state.school, ...loaded.school };
-        state.attendance = { ...state.attendance, ...loaded.attendance };
-        state.points = { ...state.points, ...loaded.points };
-        
-        // Ensure sub-keys exist for attendance
-        if (!state.attendance.leaders) state.attendance.leaders = {};
-        if (!state.attendance.gilanpasa) state.attendance.gilanpasa = {};
-    }
-    
     // Check for theme
     if (localStorage.getItem('nimal-theme') === 'yellow') {
         document.body.classList.add('yellow-theme');
     }
 
-    renderView('dashboard');
-    updateSchoolInfo();
-    updateDate();
+    // Real-time synchronization with Firestore
+    db.collection('nimalWeb').doc('appData').onSnapshot((doc) => {
+        if (doc.exists) {
+            const loaded = doc.data();
+            // Deep merge logic to ensure new keys exist
+            state = { ...state, ...loaded };
+            state.school = { ...state.school, ...loaded.school };
+            state.attendance = { ...state.attendance, ...loaded.attendance };
+            state.points = { ...state.points, ...loaded.points };
+            
+            // Ensure sub-keys exist for attendance
+            if (!state.attendance.leaders) state.attendance.leaders = {};
+            if (!state.attendance.gilanpasa) state.attendance.gilanpasa = {};
+        }
+
+        if (!isAppInitialized) {
+            renderView('dashboard');
+            isAppInitialized = true;
+        } else {
+            // Re-render current view with new data
+            const activeDesktop = document.querySelector('.nav-item.active');
+            if (activeDesktop) {
+                renderView(activeDesktop.getAttribute('data-view'));
+            } else {
+                renderView('dashboard');
+            }
+        }
+        
+        updateSchoolInfo();
+        updateDate();
+    }, (error) => {
+        console.error("Error connecting to Firebase:", error);
+        // Fallback or initial render if completely fails offline
+        if (!isAppInitialized) {
+            renderView('dashboard');
+            updateSchoolInfo();
+            updateDate();
+            isAppInitialized = true;
+        }
+    });
 }
 
 function saveState() {
-    localStorage.setItem('nimal_web_state', JSON.stringify(state));
-    alert('දත්ත සුරැකිණි!');
+    db.collection('nimalWeb').doc('appData').set(state).then(() => {
+        alert('දත්ත සුරැකිණි! (Saved to cloud)');
+    }).catch(err => {
+        alert('දත්ත සුරැකීමට නොහැකි විය: ' + err.message);
+    });
 }
 
 // UI Utilities
@@ -70,8 +115,10 @@ function updateDate() {
 
 function updateSchoolInfo() {
     $('sidebar-school-name').textContent = state.school.name;
-    const logoContainer = $('school-logo-svg');
-    if (state.school.logo.startsWith('data:image')) {
+    const logoContainer = $('school-logo-img');
+    if (state.school.logo && state.school.logo.startsWith('data:image')) {
+        logoContainer.innerHTML = `<img src="${state.school.logo}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    } else if (state.school.logo && !state.school.logo.includes('placeholder')) {
         logoContainer.innerHTML = `<img src="${state.school.logo}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
     }
 }
@@ -606,7 +653,9 @@ function updateAttendance(date, index, status, type) {
 }
 
 function saveStateQuietly() {
-    localStorage.setItem('nimal_web_state', JSON.stringify(state));
+    db.collection('nimalWeb').doc('appData').set(state).catch(err => {
+        console.error("Auto-save failed", err);
+    });
 }
 
 // ---------------- POINTS VIEW ----------------
@@ -752,8 +801,12 @@ function updateSettings() {
 
 function resetAllData() {
     if (confirm('ඔබට විශ්වාසද? සියලුම දත්ත මැකී යනු ඇත.')) {
-        localStorage.removeItem('nimal_web_state');
-        location.reload();
+        db.collection('nimalWeb').doc('appData').delete().then(() => {
+            localStorage.removeItem('nimal_web_state');
+            location.reload();
+        }).catch(err => {
+            alert('දත්ත මකා දැමීමට නොහැකි විය: ' + err.message);
+        });
     }
 }
 
