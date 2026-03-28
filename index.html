@@ -83,14 +83,23 @@
         <!-- Main Content -->
         <main id="main-content" class="main-content">
             <header class="top-bar">
-                <button id="menu-toggle" class="menu-btn">
-                    <i data-lucide="menu"></i>
-                </button>
-                <div class="header-info">
-                    <h2 id="current-view-title">මුල පිටුව</h2>
-                    <p id="current-date"></p>
+                <div class="top-bar-left">
+                    <button id="menu-toggle" class="menu-btn">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div class="header-info">
+                        <h2 id="current-view-title">මුල පිටුව</h2>
+                        <p id="current-date"></p>
+                    </div>
                 </div>
+                
                 <div class="header-actions">
+                    <button id="theme-toggle-btn" class="theme-btn" onclick="toggleTheme()" title="තේමාව වෙනස් කරන්න">
+                        <i data-lucide="palette"></i>
+                    </button>
+                    <button id="install-btn-top" class="install-btn-compact" style="display:none">
+                        <i data-lucide="download"></i>
+                    </button>
                     <button id="save-all-btn" class="save-btn">
                         <i data-lucide="save"></i> <span>සුරකින්න</span>
                     </button>

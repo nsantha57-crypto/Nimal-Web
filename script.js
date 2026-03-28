@@ -33,8 +33,23 @@ let state = {
 function init() {
     const savedState = localStorage.getItem('nimal_web_state');
     if (savedState) {
-        state = JSON.parse(savedState);
+        const loaded = JSON.parse(savedState);
+        // Deep merge logic to ensure new keys exist
+        state = { ...state, ...loaded };
+        state.school = { ...state.school, ...loaded.school };
+        state.attendance = { ...state.attendance, ...loaded.attendance };
+        state.points = { ...state.points, ...loaded.points };
+        
+        // Ensure sub-keys exist for attendance
+        if (!state.attendance.leaders) state.attendance.leaders = {};
+        if (!state.attendance.gilanpasa) state.attendance.gilanpasa = {};
     }
+    
+    // Check for theme
+    if (localStorage.getItem('nimal-theme') === 'yellow') {
+        document.body.classList.add('yellow-theme');
+    }
+
     renderView('dashboard');
     updateSchoolInfo();
     updateDate();
@@ -59,6 +74,15 @@ function updateSchoolInfo() {
     if (state.school.logo.startsWith('data:image')) {
         logoContainer.innerHTML = `<img src="${state.school.logo}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
     }
+}
+
+// Theme Toggle
+function toggleTheme() {
+    const body = document.body;
+    body.classList.toggle('yellow-theme');
+    const isYellow = body.classList.contains('yellow-theme');
+    localStorage.setItem('nimal-theme', isYellow ? 'yellow' : 'default');
+    alert(isYellow ? 'කහ/දුඹුරු තේමාව සක්‍රීය විය!' : 'සාමාන්‍ය තේමාව සක්‍රීය විය!');
 }
 
 // Navigation Logic
@@ -814,10 +838,11 @@ let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    $('install-btn').style.display = 'flex';
+    const btn = $('install-btn-top');
+    if (btn) btn.style.display = 'flex';
 });
 
-$('install-btn').addEventListener('click', async () => {
+$('install-btn-top').addEventListener('click', async () => {
     if (deferredPrompt) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
@@ -827,6 +852,7 @@ $('install-btn').addEventListener('click', async () => {
         deferredPrompt = null;
     }
 });
+
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
