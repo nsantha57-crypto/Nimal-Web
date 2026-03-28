@@ -916,5 +916,23 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Force update PWA
+function updateApp() {
+    if ('serviceWorker' in navigator) {
+        caches.keys().then((names) => {
+            for (let name of names) caches.delete(name);
+        });
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (let registration of registrations) {
+                registration.unregister();
+            }
+        }).then(() => {
+            window.location.reload(true);
+        });
+    } else {
+        window.location.reload(true);
+    }
+}
+
 // Start the app
 init();
